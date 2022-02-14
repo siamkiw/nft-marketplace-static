@@ -6,6 +6,7 @@ let items = []
 async function initWeb3() {
     NFTMarketAbi = await onGetAbi("NFTMarket");
     NFTAbi = await onGetAbi("NFT");
+    NFTFusionAbi = await onGetAbi("NFTFusion");
     await loadWeb3();
     await loadBlockchainData();
     await initMyNFT()

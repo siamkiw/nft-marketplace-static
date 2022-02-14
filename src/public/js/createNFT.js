@@ -15,6 +15,7 @@ createNFTButton.disabled = true
 async function initWeb3() {
     NFTMarketAbi = await onGetAbi("NFTMarket");
     NFTAbi = await onGetAbi("NFT");
+    NFTFusionAbi = await onGetAbi("NFTFusion");
     await loadWeb3();
     await loadBlockchainData();    
     await initCreateNFT()
@@ -26,7 +27,6 @@ let imageURL = ''
 let dataURL = ''
 
 async function initCreateNFT(){
-
     // add function to image input 
     imageNFT.addEventListener('change', async function(){
         if (this.files && this.files[0]) {
@@ -80,7 +80,7 @@ async function initCreateNFT(){
 
     createNFTButton.addEventListener('click', async function(){
         await onCreateItem(dataURL)
-        window.location.href = '/'
+        // window.location.href = '/'
     })
 
 

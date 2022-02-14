@@ -1,24 +1,14 @@
-let NFTContainer = document.getElementById('NFTContainer')
-
-let rawItems = null
-let items = []
-
 async function initWeb3() {
     NFTMarketAbi = await onGetAbi("NFTMarket");
     NFTAbi = await onGetAbi("NFT");
     NFTFusionAbi = await onGetAbi("NFTFusion");
     await loadWeb3();
     await loadBlockchainData();
-    await initDashboard()
+    rawItems = await onGetMyItems()
+    renderMyItems(rawItems)
 }
 
-async function initDashboard(){
-    rawItems = await onGetMyCreatedItems()
-    console.log('rawItems : ',rawItems)
-    renderMyCreatedItems(rawItems)
-}
-
-async function renderMyCreatedItems(data){
+async function renderMyItems(data){
     items = await Promise.all(data.map(async i => {
 
         const tokenUri = await NFTContract.methods.tokenURI(i.tokenId).call()
@@ -61,3 +51,9 @@ async function renderMyCreatedItems(data){
           `
       }
 }
+
+
+document.querySelector('#fusionNFTButton').addEventListener('click', function() {
+    onFusionItem(1, 2)
+})
+

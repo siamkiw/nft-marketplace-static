@@ -1,6 +1,6 @@
-let NFTMarketAbi, NFTAbi;
+let NFTMarketAbi, NFTAbi, NFTFusionAbi;
 
-let NFTMarketContract, NFTContract, networkId;
+let NFTMarketContract, NFTContract, NFTFusion, networkId;
 
 async function onGetAbi(contractName) {
   let response = await fetch(`/contracts/${contractName}.json`, {
@@ -33,9 +33,10 @@ async function loadBlockchainData() {
   // get network data form json abi file by networkId
   const NFTMarketAbiNetworkData = NFTMarketAbi.networks[networkId];
   const NFTAbiNetworkData = NFTAbi.networks[networkId];
+  const NFTFusionNetworkData = NFTFusionAbi.networks[networkId];
 
   // check is network is valid
-  if (NFTMarketAbiNetworkData && NFTAbiNetworkData) {
+  if (NFTMarketAbiNetworkData && NFTAbiNetworkData && NFTFusionNetworkData) {
     // connect to contract
     NFTMarketContract = new web3.eth.Contract(
       NFTMarketAbi.abi,
@@ -43,14 +44,17 @@ async function loadBlockchainData() {
     );
     NFTContract = new web3.eth.Contract(NFTAbi.abi, NFTAbiNetworkData.address);
 
+    NFTFusionContract = new web3.eth.Contract(NFTFusionAbi.abi, NFTFusionNetworkData.address)
+
     console.log("NFTMarketContract : ", NFTMarketContract.methods);
     console.log("NFTContract : ", NFTContract.methods);
+    console.log("NFTFusion : ", NFTFusionContract.methods)
   } else {
     window.alert("Contract not deployed to detected network.");
     return 
   }
 
-  if(!NFTMarketContract || !NFTContract){
+  if(!NFTMarketContract || !NFTContract || !NFTFusionContract){
     window.alert("Contract not deployed to detected network.");
     return 
   }
@@ -84,7 +88,6 @@ async function onGetMyCreatedItems(){
 
 }
 
-
 async function onCreateItem(dataURL){
 
     const account = await web3.eth.getAccounts();
@@ -108,3 +111,16 @@ async function onCreateItem(dataURL){
     console.log('marketNFTTransaction : ', marketNFTTransaction)
 }
 
+
+async function onFusionItem(baseItemId, ingredientItemId){
+
+  const account = await web3.eth.getAccounts();
+
+  const NFTAddress = NFTAbi.networks[networkId].address
+
+  let NFTFusionTransaction = await NFTFusionContract.methods.fusionNFT(baseItemId, ingredientItemId, "https://ipfs.infura.io/ipfs/QmSiXrNuNDvbeXjJsyiuy8R3GdtDKePQSTqiu7RhhV8TBb").send({from: account[0]}).on('transactionHash', (hash) => {
+    console.log('on transactionHash NFTFusionTransaction')
+})  
+
+console.log("NFTFusionTransaction : ", NFTFusionTransaction)
+}

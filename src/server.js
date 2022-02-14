@@ -24,6 +24,10 @@ app.get('/dashboard', (req, res) => {
     res.sendFile(path.join(__dirname, '/page/dashboard.html'))
 })
 
+app.get('/fusion', (req, res) => {
+  res.sendFile(path.join(__dirname, '/page/fusion.html'))
+})
+
 // assume 404 since no middleware responded
 app.use(function(req, res, next){
     res.status(404).sendFile(path.join(__dirname, '/page/pageNotFound.html'));
