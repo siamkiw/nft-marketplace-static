@@ -9,6 +9,7 @@ contract NFT is ERC721URIStorage {
     using Counters for Counters.Counter;
     Counters.Counter private _tokenIds;
     address contractAddress;
+    mapping(uint256 => bool) public _burnToken;
 
     constructor(address marketplaceAddress) ERC721("Metaverse Tokens", "METT") {
         contractAddress = marketplaceAddress;
@@ -27,6 +28,8 @@ contract NFT is ERC721URIStorage {
     function burnToken(uint256 tokenId) public returns (uint256) {
         _burn(tokenId);
 
+        _burnToken[tokenId] = true;
+
         return tokenId;
     }
 
@@ -36,17 +39,21 @@ contract NFT is ERC721URIStorage {
         uint256 myItmeCount = 0;
 
         for (uint256 i = 0; i < totalItemCount; i++) {
-            if (ownerOf(i + 1) == msg.sender) {
-                myItmeCount += 1;
+            if (!_burnToken[i + 1]) {
+                if (ownerOf(i + 1) == msg.sender) {
+                    myItmeCount += 1;
+                }
             }
         }
 
         uint256[] memory items = new uint256[](myItmeCount);
 
-        for (uint256 i = 1; i <= totalItemCount; i++) {
-            if (ownerOf(i) == msg.sender) {
-                items[currentIndex] = i;
-                currentIndex += 1;
+        for (uint256 i = 0; i < totalItemCount; i++) {
+            if (!_burnToken[i + 1]) {
+                if (ownerOf(i + 1) == msg.sender) {
+                    items[currentIndex] = i + 1;
+                    currentIndex += 1;
+                }
             }
         }
 

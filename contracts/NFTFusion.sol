@@ -7,41 +7,44 @@ import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "./INFT.sol";
 import "./NFT.sol";
 
-contract NFTFusion is ReentrancyGuard{
+contract NFTFusion is ReentrancyGuard {
     address payable owner;
 
     NFT nftContract;
 
     struct fusionDetail {
-        uint baseItemId;
-        uint ingredientItemId;
+        uint256 baseItemId;
+        uint256 ingredientItemId;
         address owner;
         address nftContract;
-        uint itemId;
+        uint256 itemId;
     }
 
-    mapping(uint => fusionDetail) public fusionDetails;
-    uint public fusionIndex;
+    mapping(uint256 => fusionDetail) public fusionDetails;
+    uint256 public fusionIndex;
 
     constructor(NFT _nftContract) {
         owner = payable(msg.sender);
         nftContract = _nftContract;
     }
-    
-    event FusionNFT (
-        uint baseItemId,
-        uint ingredientItemId,
+
+    event FusionNFT(
+        uint256 baseItemId,
+        uint256 ingredientItemId,
         address owner,
         address nftContract,
-        uint itemId
+        uint256 itemId
     );
 
-    function fusionNFT(uint baseItemId, uint ingredientItemId, string memory tokenURI) public returns (uint256) {
-        
+    function fusionNFT(
+        uint256 baseItemId,
+        uint256 ingredientItemId,
+        string memory tokenURI
+    ) public returns (uint256) {
         nftContract.burnToken(baseItemId);
         nftContract.burnToken(ingredientItemId);
-        uint itemId = nftContract.createToken(tokenURI);
-        
+        uint256 itemId = nftContract.createToken(tokenURI);
+        nftContract.transferFrom(address(this), msg.sender, itemId);
         // INFT(nftContract).burnToken(baseItemId);
         // INFT(nftContract).burnToken(ingredientItemId);
 
@@ -54,11 +57,16 @@ contract NFTFusion is ReentrancyGuard{
             address(nftContract),
             itemId
         );
-        fusionIndex++ ;
+        fusionIndex++;
 
-        emit FusionNFT (baseItemId, ingredientItemId, msg.sender, address(nftContract), itemId);
+        emit FusionNFT(
+            baseItemId,
+            ingredientItemId,
+            msg.sender,
+            address(nftContract),
+            itemId
+        );
 
         return itemId;
     }
-
 }
