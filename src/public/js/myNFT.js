@@ -10,8 +10,13 @@ async function initWeb3() {
     await loadWeb3();
     await loadBlockchainData();
     // await initMyNFT()
+
+    // let items = await onGetMyNFTToken()
+    // renderNFTTokens(items, NFTContainer)
+
     let items = await onGetMyNFTToken()
-    renderNFTTokens(items, NFTContainer)
+    console.log('onGetMyNFTToken : ', items)
+    // renderNFTTokens(items, NFTContainer)
 }
 
 async function renderNFTTokens(items, DOMElement){

@@ -112,13 +112,13 @@ async function onCreateItem(dataURL){
 }
 
 
-async function onFusionItem(baseItemId, ingredientItemId){
+async function onFusionItem(baseItemId, ingredientItemId, dataURI){
 
   const account = await web3.eth.getAccounts();
 
   const NFTAddress = NFTAbi.networks[networkId].address
 
-  let NFTFusionTransaction = await NFTFusionContract.methods.fusionNFT(baseItemId, ingredientItemId, "https://ipfs.infura.io/ipfs/QmSiXrNuNDvbeXjJsyiuy8R3GdtDKePQSTqiu7RhhV8TBb").send({from: account[0]}).on('transactionHash', (hash) => {
+  let NFTFusionTransaction = await NFTFusionContract.methods.fusionNFT(baseItemId, ingredientItemId, dataURI).send({from: account[0]}).on('transactionHash', (hash) => {
     console.log('on transactionHash NFTFusionTransaction')
 })  
 
@@ -140,7 +140,9 @@ async function onGetMyNFTToken(){
     });
     let meta = await response.json();
     meta.owner = accounts[0]
+    meta.tokenId = itemId
     items.push(meta)
+    console.log("meta : ", meta)
   }
 
   return items
