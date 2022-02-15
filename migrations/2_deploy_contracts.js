@@ -1,10 +1,18 @@
 const NFTMarket = artifacts.require("NFTMarket");
+const NFTFusion = artifacts.require("NFTFusion");
 const NFT = artifacts.require("NFT");
 
-module.exports = function(deployer) {
+module.exports = async function(deployer) {
 
-    deployer.deploy(NFTMarket).then(function() {
-        return deployer.deploy(NFT, NFTMarket.address);
-      });
+    await deployer.deploy(NFTMarket)
+
+    const NFTMarketContract = await NFTMarket.deployed()
+
+    await deployer.deploy(NFT, NFTMarketContract.address)
+
+    await deployer.deploy(NFTFusion, NFT.address)
+
+    const NFTFusionContract = await NFTFusion.deployed()
+
 
 };

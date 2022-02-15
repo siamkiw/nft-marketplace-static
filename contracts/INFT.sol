@@ -2,7 +2,10 @@
 
 pragma solidity ^0.8.3;
 
-interface INFT {
+
+interface INFT{
+
+    event Transfer(address indexed from, address indexed to, uint256 indexed tokenId);
 
     function createToken(string memory tokenURI) external;
 
