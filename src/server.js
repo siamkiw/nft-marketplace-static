@@ -20,6 +20,10 @@ app.get('/my-nft', (req, res) => {
     res.sendFile(path.join(__dirname, '/page/myNFT.html'));
 })
 
+app.get('/my-market-nft', (req, res) => {
+  res.sendFile(path.join(__dirname, '/page/myMarketNFT.html'));
+})
+
 app.get('/dashboard', (req, res) => {
     res.sendFile(path.join(__dirname, '/page/dashboard.html'))
 })

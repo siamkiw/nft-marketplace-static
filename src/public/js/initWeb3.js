@@ -124,3 +124,33 @@ async function onFusionItem(baseItemId, ingredientItemId){
 
 console.log("NFTFusionTransaction : ", NFTFusionTransaction)
 }
+
+
+async function onGetMyNFTToken(){
+  const accounts = await web3.eth.getAccounts();
+  
+  let itemIds = await NFTContract.methods.fetchMyNFTs().call({from: accounts[0]})
+  let items = []
+
+  for(let itemId of itemIds){
+    const tokenUri = await NFTContract.methods.tokenURI(itemId).call()
+
+    let response = await fetch(tokenUri, {
+      method: "GET",
+    });
+    let meta = await response.json();
+    meta.owner = accounts[0]
+    items.push(meta)
+  }
+
+  return items
+
+}
+
+async function onDeleteMarketItem(marketId){
+  const accounts = await web3.eth.getAccounts();
+  const NFTAddress = NFTAbi.networks[networkId].address
+  const deleteMarketIdTransaction = await NFTMarketContract.methods.deleteMarketItem(NFTAddress, marketId).send({from: accounts[0]})
+  console.log("deleteMarketIdTransaction : ", deleteMarketIdTransaction)
+  // return marketId
+}

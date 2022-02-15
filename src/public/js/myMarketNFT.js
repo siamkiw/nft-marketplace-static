@@ -9,27 +9,9 @@ async function initWeb3() {
     NFTFusionAbi = await onGetAbi("NFTFusion");
     await loadWeb3();
     await loadBlockchainData();
-    // await initMyNFT()
-    let items = await onGetMyNFTToken()
-    renderNFTTokens(items, NFTContainer)
+    await initMyNFT();
 }
 
-async function renderNFTTokens(items, DOMElement){
-  for(let item of items){
-  // add element to container
-  console.log("renderNFTTokens token : ", item)
-  DOMElement.innerHTML += `
-      <div class="card me-3 mb-3" style="width: 18rem;">
-          <img src="${item.image}" class="card-img-top" alt="...">
-          <div class="card-body">
-              <h5 class="card-title" id="NFTName">Name : ${item.name}</h5>
-              <p class="card-text" id="NFTDesc">Description : ${item.description}</p>
-              <p class="card-text" id="NFTDesc">Owner : ${item.owner}</p>
-          </div>
-      </div>
-    `
-  }
-}
 
 async function initMyNFT(){
     rawItems = await onGetMyItems()
@@ -54,6 +36,7 @@ async function renderMyItems(data){
         let item = {
           price,
           itemId: parseInt(i.itemId),
+          tokenId: parseInt(i.tokenId),
           seller: i.seller,
           owner: i.owner,
           image: meta.image,
@@ -63,5 +46,23 @@ async function renderMyItems(data){
         return item
       }))
 
+      for(let item of items){
+        console.log('item : ', item)
+      // add element to container   
+        NFTContainer.innerHTML += `
+          <div class="card me-3 mb-3" style="width: 18rem;">
+              <img src="${item.image}" class="card-img-top" alt="...">
+              <div class="card-body">
+                  <h5 class="card-title" id="NFTName">Name : ${item.name}</h5>
+                  <p class="card-text" id="NFTMarketId">Market ID : ${item.itemId}</p>
+                  <p class="card-text" id="NFTTokenId">Token ID : ${item.tokenId}</p>
+                  <p class="card-text" id="NFTDesc">${item.description}</p>
+                  <p class="card-text" id="NFTPrice">${item.price} ETH</p>
+                  <p class="card-text" >Owner : ${item.owner}</p>
+                  <p class="card-text" >Seller : ${item.seller}</p>
+              </div>
+          </div>
+        `
+    }
 
 }

@@ -80,7 +80,7 @@ async function initCreateNFT(){
 
     createNFTButton.addEventListener('click', async function(){
         await onCreateItem(dataURL)
-        // window.location.href = '/'
+        window.location.href = '/'
     })
 
 
