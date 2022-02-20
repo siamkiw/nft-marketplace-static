@@ -16,7 +16,7 @@ async function initWeb3() {
 
     let items = await onGetMyNFTToken()
     console.log('onGetMyNFTToken : ', items)
-    // renderNFTTokens(items, NFTContainer)
+    renderNFTTokens(items, NFTContainer)
 }
 
 async function renderNFTTokens(items, DOMElement){

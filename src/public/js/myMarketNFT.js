@@ -15,7 +15,7 @@ async function initWeb3() {
 
 async function initMyNFT(){
     rawItems = await onGetMyItems()
-    console.log('rawItems : ',rawItems)
+    console.log('fetchMyNFTs rawItems : ',rawItems)
     renderMyItems(rawItems)
 }
 

@@ -80,10 +80,8 @@ async function onGetMyItems(){
 
 async function onGetMyCreatedItems(){
     const accounts = await web3.eth.getAccounts();
-    console.log(accounts);
 
     const items = await NFTMarketContract.methods.fetchItemsCreated().call({from: accounts[0]})
-    console.log("items : ", items)
     return items
 
 }
@@ -117,6 +115,16 @@ async function onFusionItem(baseItemId, ingredientItemId, dataURI){
   const account = await web3.eth.getAccounts();
 
   const NFTAddress = NFTAbi.networks[networkId].address
+
+  const NFTFusionAddress = NFTFusionAbi.networks[networkId].address
+
+  const NFTContractTransactionBaseToken = NFTContract.methods.transferFrom(account[0], NFTFusionAddress, baseItemId)
+
+  console.log('NFTContractTransactionBaseToken : ', NFTContractTransactionBaseToken)
+
+  const NFTContractTransactionIngredientItem = NFTContract.methods.transferFrom(account[0], NFTFusionAddress, ingredientItemId)
+
+  console.log('NFTContractTransactionIngredientItem : ', NFTContractTransactionIngredientItem)
 
   let NFTFusionTransaction = await NFTFusionContract.methods.fusionNFT(baseItemId, ingredientItemId, dataURI).send({from: account[0]}).on('transactionHash', (hash) => {
     console.log('on transactionHash NFTFusionTransaction')

@@ -31,6 +31,26 @@ contract NFTMarket is ReentrancyGuard {
 
     mapping(uint256 => MarketItem) private idToMarketItem;
 
+    mapping(address => bool) private _approvals;
+
+    event UpdateApprovals(
+        address sender,
+        address contractAddress,
+        bool approved
+    );
+
+    function updateApprovals(address contractAddress, bool approved) public {
+        require(msg.sender == owner, "You are not owner.");
+
+        _approvals[contractAddress] = approved;
+
+        emit UpdateApprovals(msg.sender, contractAddress, approved);
+    }
+
+    function isApproved(address contractAddress) private view returns (bool) {
+        return _approvals[contractAddress];
+    }
+
     event MarketItemCreated(
         uint256 indexed itemId,
         address indexed nftContract,
@@ -214,7 +234,8 @@ contract NFTMarket is ReentrancyGuard {
         returns (uint256)
     {
         require(
-            idToMarketItem[itemId].owner == msg.sender,
+            idToMarketItem[itemId].owner == msg.sender ||
+                isApproved(msg.sender) == true,
             "This item is not your."
         );
         require(idToMarketItem[itemId].sold == true, "This item is not sold.");
@@ -238,5 +259,15 @@ contract NFTMarket is ReentrancyGuard {
         );
 
         return idToMarketItem[itemId].itemId;
+    }
+
+    function getMarketIdByToken(uint256 tokenId) public view returns (uint256) {
+        uint256 totalItemCount = _itemIds.current();
+        for (uint256 i = 0; i < totalItemCount; i++) {
+            if (idToMarketItem[i + 1].tokenId == tokenId) {
+                return idToMarketItem[i + 1].itemId;
+            }
+        }
+        return 0;
     }
 }
