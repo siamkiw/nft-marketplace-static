@@ -36,7 +36,7 @@ async function renderMarketsItems(data){
               price,
               itemId: parseInt(i.itemId),
               seller: i.seller,
-              owner: i.owner,
+              owner: i.ownerAddress,
               image: meta.image,
               name: meta.name,
               description: meta.description,

@@ -38,7 +38,7 @@ async function renderMyItems(data){
           itemId: parseInt(i.itemId),
           tokenId: parseInt(i.tokenId),
           seller: i.seller,
-          owner: i.owner,
+          owner: i.ownerAddress,
           image: meta.image,
           name: meta.name,
           description: meta.description,

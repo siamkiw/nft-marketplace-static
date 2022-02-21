@@ -37,7 +37,7 @@ async function renderMyCreatedItems(data){
       itemId: parseInt(i.itemId),
       tokenId: parseInt(i.tokenId),
       seller: i.seller,
-      owner: i.owner,
+      owner: i.ownerAddress,
       image: meta.image,
       name: meta.name,
       sold: i.sold,
@@ -59,7 +59,7 @@ async function renderMyCreatedItems(data){
               <p class="card-text" id="NFTTokenId">Token ID : ${item.tokenId}</p>
               <p class="card-text" id="NFTDesc">${item.description}</p>
               <p class="card-text" id="NFTPrice">${item.price} ETH</p>
-              <p class="card-text" >Owner : ${item.owner}</p>
+              <p class="card-text" >Owner : ${item.ownerAddress}</p>
               <p class="card-text" >Seller : ${item.seller}</p>
               <button type="button" class="btn btn-danger" id="${buttonId}">${item.sold ? 'Delete NFT' : 'Remove NFT'}</button>
           </div>
