@@ -6,13 +6,17 @@ require('chai')
 
 const NFTMarket = artifacts.require('../contracts/NFTMarket.sol')
 const NFT = artifacts.require('../contracts/NFT.sol')
+const NFTFusion = artifacts.require('../contracts/NFTFusion.sol')
+
 
 contract('NFTMarket', ([deployer, author, tipper]) => {
-    let market, nft, NFTMarketAddress, NFTAddress
+    let market, nft, fusion, NFTMarketAddress, NFTAddress, NFTFusionAddress
 
     before(async () => {
         market = await NFTMarket.deployed()
         nft = await NFT.deployed(market.address)
+        fusion = await NFTFusion.deployed(nft.address, market.address)
+        market.updateApprovals(nft.address, true)
       })
 
     describe('deployment', async => {
@@ -31,6 +35,14 @@ contract('NFTMarket', ([deployer, author, tipper]) => {
             assert.notEqual(NFTAddress, '')
             assert.notEqual(NFTAddress, null)
             assert.notEqual(NFTAddress, undefined)
+          })
+
+          it('deploys Fusion successfully', async () => {
+            NFTFusionAddress = await fusion.address
+            assert.notEqual(NFTFusionAddress, 0x0)
+            assert.notEqual(NFTFusionAddress, '')
+            assert.notEqual(NFTFusionAddress, null)
+            assert.notEqual(NFTFusionAddress, undefined)
           })
     })
 
@@ -63,7 +75,7 @@ contract('NFTMarket', ([deployer, author, tipper]) => {
                   price: i.price.toString(),
                   tokenId: i.tokenId.toString(),
                   seller: i.seller,
-                  owner: i.owner,
+                  owner: i.ownerAddress,
                   tokenUri
                 }
                 return item
@@ -77,6 +89,66 @@ contract('NFTMarket', ([deployer, author, tipper]) => {
 
           
         
+    })
+
+    describe("Fusion token", async function(){
+
+      it("Should create token and fusion between token", async function(){
+        
+        // create token 
+        await nft.createToken("https://www.mytokenlocation.com")
+        await nft.createToken("https://www.mytokenlocation2.com")
+        
+        // create market item form token
+        let auctionPrice = web3.utils.toWei('0.3', 'Ether')
+        let listingPrice = await market.getListingPrice()
+
+        let baseTokenId = 3
+        let baseItemId = 3
+        let ingredientTokenId = 4
+        let ingredientItemId = 4
+
+        await market.createMarketItem(NFTAddress, baseTokenId, auctionPrice, { value: listingPrice })
+        await market.createMarketItem(NFTAddress, ingredientTokenId, auctionPrice, { value: listingPrice })
+
+        // buy item in market
+        accounts = await web3.eth.getAccounts();
+        const buyerAddress = accounts[0]
+
+        await market.createMarketSale(NFTAddress, baseItemId, { from : buyerAddress, value: auctionPrice})
+        await market.createMarketSale(NFTAddress, ingredientItemId, { from : buyerAddress, value: auctionPrice})
+
+        // fusion token
+          // transfer token to fusion contract 
+        // await nft.transferFrom(buyerAddress, NFTFusionAddress, baseTokenId, { from : buyerAddress})
+        // await nft.transferFrom(buyerAddress, NFTFusionAddress, ingredientTokenId, { from : buyerAddress})
+
+        // create fusion token
+        // await fusion.fusionNFT(baseTokenId, ingredientTokenId, "https://www.mytokenlocation.com", { from : buyerAddress})
+
+        let myNfts = await nft.fetchMyNFTs({from : buyerAddress})
+
+        for(let val of myNfts){
+          console.log(val.toNumber())
+        }
+
+        items = await market.fetchMyNFTs({ from : buyerAddress})
+        // items = await Promise.all(items.map(async i => {
+        //   const tokenUri = await nft.tokenURI(i.tokenId)
+        //   let item = {
+        //     price: i.price.toString(),
+        //     tokenId: i.tokenId.toString(),
+        //     seller: i.seller,
+        //     owner: i.ownerAddress,
+        //     tokenUri
+        //   }
+        //   return item
+        // }))
+
+        // console.log('items : ', items)
+
+      })
+
     })
     
 })

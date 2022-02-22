@@ -68,14 +68,19 @@ contract NFTFusion is ReentrancyGuard {
             ingredientItemId
         );
 
-        nftMarketContract.deleteMarketItem(
-            nftMarketContractAddress,
-            baseItemMarketId
-        );
-        nftMarketContract.deleteMarketItem(
-            nftMarketContractAddress,
-            ingredientItemMarketId
-        );
+        if (baseItemId != 0) {
+            nftMarketContract.deleteMarketItem(
+                nftMarketContractAddress,
+                baseItemMarketId
+            );
+        }
+
+        if (ingredientItemMarketId != 0) {
+            nftMarketContract.deleteMarketItem(
+                nftMarketContractAddress,
+                ingredientItemMarketId
+            );
+        }
 
         uint256 itemId = nftContract.createToken(tokenURI);
         nftContract.transferFrom(address(this), msg.sender, itemId);
