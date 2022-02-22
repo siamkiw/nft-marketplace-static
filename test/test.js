@@ -103,49 +103,28 @@ contract('NFTMarket', ([deployer, author, tipper]) => {
         let auctionPrice = web3.utils.toWei('0.3', 'Ether')
         let listingPrice = await market.getListingPrice()
 
-        let baseTokenId = 3
-        let baseItemId = 3
-        let ingredientTokenId = 4
-        let ingredientItemId = 4
-
-        await market.createMarketItem(NFTAddress, baseTokenId, auctionPrice, { value: listingPrice })
-        await market.createMarketItem(NFTAddress, ingredientTokenId, auctionPrice, { value: listingPrice })
+        await market.createMarketItem(NFTAddress, 3, auctionPrice, { value: listingPrice })
+        await market.createMarketItem(NFTAddress, 4, auctionPrice, { value: listingPrice })
 
         // buy item in market
         accounts = await web3.eth.getAccounts();
         const buyerAddress = accounts[0]
 
-        await market.createMarketSale(NFTAddress, baseItemId, { from : buyerAddress, value: auctionPrice})
-        await market.createMarketSale(NFTAddress, ingredientItemId, { from : buyerAddress, value: auctionPrice})
+        await market.createMarketSale(NFTAddress, 3, { from : buyerAddress, value: auctionPrice})
+        await market.createMarketSale(NFTAddress, 4, { from : buyerAddress, value: auctionPrice})
 
         // fusion token
-          // transfer token to fusion contract 
-        // await nft.transferFrom(buyerAddress, NFTFusionAddress, baseTokenId, { from : buyerAddress})
-        // await nft.transferFrom(buyerAddress, NFTFusionAddress, ingredientTokenId, { from : buyerAddress})
-
-        // create fusion token
-        // await fusion.fusionNFT(baseTokenId, ingredientTokenId, "https://www.mytokenlocation.com", { from : buyerAddress})
+        await fusion.fusionNFT(3, 4, "https://www.myNewFusionToken.com", { from : buyerAddress})
 
         let myNfts = await nft.fetchMyNFTs({from : buyerAddress})
 
-        for(let val of myNfts){
-          console.log(val.toNumber())
-        }
+        let fusionTokenId = myNfts[0].toNumber()
 
-        items = await market.fetchMyNFTs({ from : buyerAddress})
-        // items = await Promise.all(items.map(async i => {
-        //   const tokenUri = await nft.tokenURI(i.tokenId)
-        //   let item = {
-        //     price: i.price.toString(),
-        //     tokenId: i.tokenId.toString(),
-        //     seller: i.seller,
-        //     owner: i.ownerAddress,
-        //     tokenUri
-        //   }
-        //   return item
-        // }))
+        let fusionTokenUrl =  await nft.tokenURI(fusionTokenId)
 
-        // console.log('items : ', items)
+        assert.equal(myNfts, 5)
+        assert.equal(fusionTokenUrl, "https://www.myNewFusionToken.com")
+
 
       })
 
