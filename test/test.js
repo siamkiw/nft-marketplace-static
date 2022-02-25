@@ -1,133 +1,202 @@
-const { assert } = require('chai')
+const { assert } = require("chai");
 
-require('chai')
-  .use(require('chai-as-promised'))
-  .should()
+require("chai")
+  .use(require("chai-as-promised"))
+  .should();
 
-const NFTMarket = artifacts.require('../contracts/NFTMarket.sol')
-const NFT = artifacts.require('../contracts/NFT.sol')
-const NFTFusion = artifacts.require('../contracts/NFTFusion.sol')
+const NFTMarket = artifacts.require("../contracts/NFTMarket.sol");
+const NFT = artifacts.require("../contracts/NFT.sol");
+const NFTFusion = artifacts.require("../contracts/NFTFusion.sol");
 
+contract("NFTMarket", ([deployer, author, tipper]) => {
+  let market, nft, fusion, NFTMarketAddress, NFTAddress, NFTFusionAddress;
 
-contract('NFTMarket', ([deployer, author, tipper]) => {
-    let market, nft, fusion, NFTMarketAddress, NFTAddress, NFTFusionAddress
+  before(async () => {
+    market = await NFTMarket.deployed();
+    nft = await NFT.deployed(market.address);
+    fusion = await NFTFusion.deployed(nft.address, market.address);
+    market.updateApprovals(nft.address, true);
+  });
 
-    before(async () => {
-        market = await NFTMarket.deployed()
-        nft = await NFT.deployed(market.address)
-        fusion = await NFTFusion.deployed(nft.address, market.address)
-        market.updateApprovals(nft.address, true)
-      })
+  describe("deployment", (async) => {
+    it("deploys NFTMarket successfully", async () => {
+      NFTMarketAddress = await market.address;
+      assert.notEqual(NFTMarketAddress, 0x0);
+      assert.notEqual(NFTMarketAddress, "");
+      assert.notEqual(NFTMarketAddress, null);
+      assert.notEqual(NFTMarketAddress, undefined);
+    });
 
-    describe('deployment', async => {
-        it('deploys NFTMarket successfully', async () => {
-            NFTMarketAddress = await market.address
-            assert.notEqual(NFTMarketAddress, 0x0)
-            assert.notEqual(NFTMarketAddress, '')
-            assert.notEqual(NFTMarketAddress, null)
-            assert.notEqual(NFTMarketAddress, undefined)
-          })
+    it("deploys NFT successfully", async () => {
+      NFTAddress = await nft.address;
+      assert.notEqual(NFTAddress, 0x0);
+      assert.notEqual(NFTAddress, "");
+      assert.notEqual(NFTAddress, null);
+      assert.notEqual(NFTAddress, undefined);
+    });
 
+    it("deploys Fusion successfully", async () => {
+      NFTFusionAddress = await fusion.address;
+      assert.notEqual(NFTFusionAddress, 0x0);
+      assert.notEqual(NFTFusionAddress, "");
+      assert.notEqual(NFTFusionAddress, null);
+      assert.notEqual(NFTFusionAddress, undefined);
+    });
+  });
 
-          it('deploys NFT successfully', async () => {
-            NFTAddress = await nft.address
-            assert.notEqual(NFTAddress, 0x0)
-            assert.notEqual(NFTAddress, '')
-            assert.notEqual(NFTAddress, null)
-            assert.notEqual(NFTAddress, undefined)
-          })
+  describe("Create and execute market sales.", async () => {
+    let listingPrice, account;
 
-          it('deploys Fusion successfully', async () => {
-            NFTFusionAddress = await fusion.address
-            assert.notEqual(NFTFusionAddress, 0x0)
-            assert.notEqual(NFTFusionAddress, '')
-            assert.notEqual(NFTFusionAddress, null)
-            assert.notEqual(NFTFusionAddress, undefined)
-          })
-    })
+    it("Should create and execute market sales", async function() {
+      listingPrice = await market.getListingPrice();
 
-    describe("Create and execute market sales.", async () => {
+      let auctionPrice = web3.utils.toWei("0.3", "Ether");
 
-        let listingPrice, account
+      await nft.createToken("https://www.mytokenlocation.com");
+      await nft.createToken("https://www.mytokenlocation2.com");
 
-          it("Should create and execute market sales", async function(){
+      await market.createMarketItem(NFTAddress, 1, auctionPrice, {
+        value: listingPrice,
+      });
+      await market.createMarketItem(NFTAddress, 2, auctionPrice, {
+        value: listingPrice,
+      });
 
-            listingPrice = await market.getListingPrice()
+      accounts = await web3.eth.getAccounts();
+      const buyerAddress = accounts[1];
+      console.log("getBalance 1 : ", await web3.eth.getBalance(buyerAddress));
 
-            let auctionPrice = web3.utils.toWei('0.3', 'Ether')
-            
-            await nft.createToken("https://www.mytokenlocation.com")
-            await nft.createToken("https://www.mytokenlocation2.com")
+      await market.createMarketSale(NFTAddress, 1, {
+        from: buyerAddress,
+        value: auctionPrice,
+      });
 
-            await market.createMarketItem(NFTAddress, 1, auctionPrice, { value: listingPrice })
-            await market.createMarketItem(NFTAddress, 2, auctionPrice, { value: listingPrice })
+      items = await market.fetchMarketItems();
+      items = await Promise.all(
+        items.map(async (i) => {
+          const tokenUri = await nft.tokenURI(i.tokenId);
+          let item = {
+            price: i.price.toString(),
+            tokenId: i.tokenId.toString(),
+            seller: i.seller,
+            owner: i.ownerAddress,
+            tokenUri,
+          };
+          return item;
+        })
+      );
 
-            accounts = await web3.eth.getAccounts();
-            const buyerAddress = accounts[1]
-            console.log("getBalance 1 : ", await web3.eth.getBalance(buyerAddress))
+      console.log("items : ", items);
+      console.log("tipper : ", tipper);
+      console.log("getBalance 2 : ", await web3.eth.getBalance(buyerAddress));
+    });
+  });
 
-            await market.createMarketSale(NFTAddress, 1, { from : buyerAddress, value: auctionPrice})
+  describe("Fusion token", async function() {
 
-            items = await market.fetchMarketItems()
-            items = await Promise.all(items.map(async i => {
-                const tokenUri = await nft.tokenURI(i.tokenId)
-                let item = {
-                  price: i.price.toString(),
-                  tokenId: i.tokenId.toString(),
-                  seller: i.seller,
-                  owner: i.ownerAddress,
-                  tokenUri
-                }
-                return item
-              }))
+    it("Should check item thai is in market or not", async function() {
+      // create token
+      await nft.createToken("https://www.mytokenlocation3.com");
+      await nft.createToken("https://www.mytokenlocation4.com");
 
-            console.log('items : ', items)
-            console.log('tipper : ', tipper)
-            console.log("getBalance 2 : ", await web3.eth.getBalance(buyerAddress))
-            
-          })
+      // create market item form token
+      let auctionPrice = web3.utils.toWei("0.3", "Ether");
+      let listingPrice = await market.getListingPrice();
 
-          
-        
-    })
+      await market.createMarketItem(NFTAddress, 3, auctionPrice, {
+        value: listingPrice,
+      });
+      await market.createMarketItem(NFTAddress, 4, auctionPrice, {
+        value: listingPrice,
+      });
 
-    describe("Fusion token", async function(){
+      let marketItems = await market.fetchMarketItems();
 
-      it("Should create token and fusion between token", async function(){
-        
-        // create token 
-        await nft.createToken("https://www.mytokenlocation.com")
-        await nft.createToken("https://www.mytokenlocation2.com")
-        
-        // create market item form token
-        let auctionPrice = web3.utils.toWei('0.3', 'Ether')
-        let listingPrice = await market.getListingPrice()
+      // marketItems = await Promise.all(
+      //   items.map(async (i) => {
+      //     const tokenUri = await nft.tokenURI(i.tokenId);
+      //     let item = {
+      //       price: i.price.toString(),
+      //       tokenId: i.tokenId.toString(),
+      //       seller: i.seller,
+      //       owner: i.owner,
+      //       tokenUri,
+      //     };
+      //     return item;
+      //   })
+      // );
 
-        await market.createMarketItem(NFTAddress, 3, auctionPrice, { value: listingPrice })
-        await market.createMarketItem(NFTAddress, 4, auctionPrice, { value: listingPrice })
+      console.log("marketItems -> : ", marketItems)
 
-        // buy item in market
-        accounts = await web3.eth.getAccounts();
-        const buyerAddress = accounts[0]
+    });
 
-        await market.createMarketSale(NFTAddress, 3, { from : buyerAddress, value: auctionPrice})
-        await market.createMarketSale(NFTAddress, 4, { from : buyerAddress, value: auctionPrice})
+    it("Should create token and fusion between item", async function() {
+      // create token
+      await nft.createToken("https://www.mytokenlocation.com");
+      await nft.createToken("https://www.mytokenlocation2.com");
 
-        // fusion token
-        await fusion.fusionNFT(3, 4, "https://www.myNewFusionToken.com", { from : buyerAddress})
+      // create market item form token
+      let auctionPrice = web3.utils.toWei("0.3", "Ether");
+      let listingPrice = await market.getListingPrice();
 
-        let myNfts = await nft.fetchMyNFTs({from : buyerAddress})
+      await market.createMarketItem(NFTAddress, 5, auctionPrice, {
+        value: listingPrice,
+      });
+      await market.createMarketItem(NFTAddress, 6, auctionPrice, {
+        value: listingPrice,
+      });
 
-        let fusionTokenId = myNfts[0].toNumber()
+      // buy item in market
+      accounts = await web3.eth.getAccounts();
+      const buyerAddress = accounts[0];
 
-        let fusionTokenUrl =  await nft.tokenURI(fusionTokenId)
+      await market.createMarketSale(NFTAddress, 5, {
+        from: buyerAddress,
+        value: auctionPrice,
+      });
+      await market.createMarketSale(NFTAddress, 6, {
+        from: buyerAddress,
+        value: auctionPrice,
+      });
 
-        assert.equal(myNfts, 5)
-        assert.equal(fusionTokenUrl, "https://www.myNewFusionToken.com")
+      // fusion token
+      await fusion.fusionNFT(5, 6, "https://www.myNewFusionToken.com", {
+        from: buyerAddress,
+      });
 
+      let myNfts = await nft.fetchMyNFTs({ from: buyerAddress });
 
-      })
+      let fusionTokenId = myNfts[0].toNumber();
 
-    })
-    
-})
+      let fusionTokenUrl = await nft.tokenURI(fusionTokenId);
+
+      assert.equal(myNfts, 7);
+      assert.equal(fusionTokenUrl, "https://www.myNewFusionToken.com");
+    });
+
+    it("Should create token and fusion between token", async function() {
+      accounts = await web3.eth.getAccounts();
+      const buyerAddress = accounts[0];
+
+      // create token
+      await nft.createToken("https://www.mytokenlocation.com", {
+        from: buyerAddress,
+      });
+      await nft.createToken("https://www.mytokenlocation2.com", {
+        from: buyerAddress,
+      });
+
+      // fusion token
+      await fusion.fusionNFT(6, 7, "https://www.myNewFusionToken2.com", {
+        from: buyerAddress,
+      });
+
+      let myNfts = await nft.fetchMyNFTs({ from: buyerAddress });
+      let fusionTokenId = myNfts[1].toNumber();
+      let fusionTokenUrl = await nft.tokenURI(fusionTokenId);
+
+      // assert.equal(fusionTokenId, 8);
+      // assert.equal(fusionTokenUrl, "https://www.myNewFusionToken2.com");
+    });
+  });
+});

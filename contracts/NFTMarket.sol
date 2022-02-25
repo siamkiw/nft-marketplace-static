@@ -211,6 +211,30 @@ contract NFTMarket is ReentrancyGuard, Owner {
         bool isDelete
     );
 
+    function isMarketItem(uint256 tokenId) public view returns (bool) {
+        uint256 totalItemCount = _itemIds.current();
+        uint256 itemCount = 0;
+
+        for (uint256 i = 0; i < totalItemCount; i++) {
+            if (
+                idToMarketItem[i + 1].ownerAddress == msg.sender &&
+                idToMarketItem[i + 1].isDelete == false
+            ) {
+                itemCount += 1;
+            }
+        }
+
+        for (uint256 i = 0; i < totalItemCount; i++) {
+            if (
+                idToMarketItem[i + 1].tokenId == tokenId &&
+                idToMarketItem[i + 1].isDelete == false
+            ) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     function deleteMarketItem(address nftContract, uint256 itemId)
         public
         returns (uint256)

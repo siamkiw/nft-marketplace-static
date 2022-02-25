@@ -68,14 +68,21 @@ contract NFTFusion is ReentrancyGuard {
             ingredientItemId
         );
 
-        if (baseItemId != 0) {
+        bool isbaseItemIdMarketItem = nftMarketContract.isMarketItem(
+            baseItemId
+        );
+        bool isIngredientItemIdMarketItem = nftMarketContract.isMarketItem(
+            baseItemId
+        );
+
+        if (isbaseItemIdMarketItem) {
             nftMarketContract.deleteMarketItem(
                 nftMarketContractAddress,
                 baseItemMarketId
             );
         }
 
-        if (ingredientItemMarketId != 0) {
+        if (isIngredientItemIdMarketItem) {
             nftMarketContract.deleteMarketItem(
                 nftMarketContractAddress,
                 ingredientItemMarketId
