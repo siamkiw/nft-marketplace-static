@@ -107,6 +107,9 @@ contract NFTMarket is ReentrancyGuard, Owner {
         IERC721(nftContract).transferFrom(address(this), msg.sender, tokenId);
         idToMarketItem[itemId].ownerAddress = payable(msg.sender);
         idToMarketItem[itemId].sold = true;
+
+        deleteMarketItem(nftContract, itemId);
+
         _itemsSold.increment();
         payable(ownerAddress).transfer(listingPrice);
     }
@@ -213,23 +216,14 @@ contract NFTMarket is ReentrancyGuard, Owner {
 
     function isMarketItem(uint256 tokenId) public view returns (bool) {
         uint256 totalItemCount = _itemIds.current();
-        uint256 itemCount = 0;
 
         for (uint256 i = 0; i < totalItemCount; i++) {
-            if (
-                idToMarketItem[i + 1].ownerAddress == msg.sender &&
-                idToMarketItem[i + 1].isDelete == false
-            ) {
-                itemCount += 1;
-            }
-        }
-
-        for (uint256 i = 0; i < totalItemCount; i++) {
-            if (
-                idToMarketItem[i + 1].tokenId == tokenId &&
-                idToMarketItem[i + 1].isDelete == false
-            ) {
-                return true;
+            if (idToMarketItem[i + 1].tokenId == tokenId) {
+                if (idToMarketItem[i + 1].isDelete == false) {
+                    return true;
+                } else {
+                    return false;
+                }
             }
         }
         return false;

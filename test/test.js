@@ -130,6 +130,37 @@ contract("NFTMarket", ([deployer, author, tipper]) => {
 
     });
 
+    // test nft marketplace isMarketItem 
+
+    it("Should return true if tokenId is in marketplace.", async function(){
+
+      let marketItems = await market.fetchMarketItems();
+
+      marketItems = await Promise.all(
+        items.map(async (i) => {
+          const tokenUri = await nft.tokenURI(i.tokenId);
+          let item = {
+            price: i.price.toString(),
+            tokenId: i.tokenId.toString(),
+            seller: i.seller,
+            owner: i.owner,
+            tokenUri,
+          };
+          return item;
+        })
+      );
+
+      let inMarketplace =  await market.isMarketItem(marketItems[0].tokenId);
+
+      let inNotMarketplace =  await market.isMarketItem(1);
+
+      assert.equal(inMarketplace, true, "token is in market");
+      
+      assert.equal(inNotMarketplace, false, "token is not in market");
+
+      console.log("inMarketplace :", inMarketplace)
+    })
+
     it("Should create token and fusion between item", async function() {
       // create token
       await nft.createToken("https://www.mytokenlocation.com");
@@ -186,17 +217,35 @@ contract("NFTMarket", ([deployer, author, tipper]) => {
         from: buyerAddress,
       });
 
+      let myRawNFTs = await nft.fetchMyNFTs({ from: buyerAddress })
+      let myNFTS = []
+      
+      for(let nft of myRawNFTs){
+        myNFTS.push(parseInt(nft.toString()))
+      }
+
+      console.log('myNFTS : ', myNFTS)
+
       // fusion token
-      await fusion.fusionNFT(6, 7, "https://www.myNewFusionToken2.com", {
+      let fusionNFTRes = await fusion.fusionNFT(myNFTS[myNFTS.length - 1], myNFTS[myNFTS.length - 2], "https://www.myNewFusionToken2.com", {
         from: buyerAddress,
       });
 
-      let myNfts = await nft.fetchMyNFTs({ from: buyerAddress });
-      let fusionTokenId = myNfts[1].toNumber();
-      let fusionTokenUrl = await nft.tokenURI(fusionTokenId);
+      const fusionToken = fusionNFTRes.logs[0].args.itemId.toNumber()
 
-      // assert.equal(fusionTokenId, 8);
-      // assert.equal(fusionTokenUrl, "https://www.myNewFusionToken2.com");
+      console.log('fusionToken : ', fusionToken)
+
+      myRawNFTs = await nft.fetchMyNFTs({ from: buyerAddress });
+      myNFTS = []
+
+      for(let nft of myRawNFTs){
+        myNFTS.push(parseInt(nft.toString()))
+      }
+
+      const fusionTokenURL = await nft.tokenURI(fusionToken);
+
+      assert.equal(myNFTS.find(tokenId => tokenId === fusionToken), fusionToken);
+      assert.equal(fusionTokenURL, "https://www.myNewFusionToken2.com");
     });
   });
 });
