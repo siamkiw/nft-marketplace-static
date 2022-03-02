@@ -171,50 +171,36 @@ function deleteMarketItem ใช้ลบ item ที่อยู่บน marke
 
 function getMarketIdByToken ใช้ query หา id ของ item id โดย id ของ NFT
 
-บรรทัดที่ 84 createMarketSale เป็น function จะถูกใช้เมื่อมีการซื้อเกืดขึ้นบน marketplace
+## NFTFusion.sol
 
-บรรทัดที่ 88 และ 89 เป็นการดึงค่าของราคา และ tokenId นั้นๆ ออกมาใช้งานผ่าน mapping ของ idTomarketItem
+![fusion](./image/fusion1.png)
 
-บรรทัดที่ 90 เป็นการเช็คว่า จำนวนเงินที่ส่งมานั้นมีค่าเท่ากับราคาของ NFT ที่ address นั้นจะทำการซื้อ
+contract NFTFusion ใช้สำหรับ fusion NFT เข้าด้วยกัน (burn 2 token แล้วทำการ mint ใหม่ให้กับ address เป็นผู้สร้าง transaction )
+contract NFTfusion จะต้องเรียกใช้ contract NFT และ NFTMarket โดนใน constructor function นั้น เราจะรับตัวแปล 2 ตัวที่เป็น type ของ contract นั้นๆแล้วกำหนดค่าให้กับ local state เพื่อให้เราสามารถเรียกใช้ function ของ contract นั้นได้เลยผ่านตัวแปล
 
-บรรทัดที่ 92 จะทำการโอนเงินจากที่ผู้ส่ง transaction ไปที่ address ของผู้ขาย
+![fusion](./image/fusion2.png)
 
-บรรทัดที่ 93 ทำการโอนความเป็นเจ้าของของ NFT นั้นไปให้ผู้ซื้อ
+funcion fusionNFT ทำหน้าที่ fusion NFT 2 token เข้าด้วยกัน โดยจุดสำคัญของ function นี้คือการที่เราได้ทำการเรียกใช้ function ของ contract อื่นได้โดยผ่านตัวแปล nftContract, nftMarketContract ที่เราได้ทำการกำหนดค่าใน constructor ของ contract นี้ เช่น
+ใน require เราได้ทำการเรียกใช้ function ownerOf ซึ้งเป็น function ที่อยุ่ใน contract NFT ผ่านตัวแปล nftContract ได้เลย
 
-บรรทัดที่ 94 กำหนดค่าของ owner ใน mapping idToMarketItem ที่ id นั้น ให้เท่ากับ address ผู้ส่ง transaction นั้น ( ผู้ซื้อ ) และ sold ให้เป็น true
+![fusion](./image/fusion3.png)
 
-บรรทัดที่ 96 บวกค่าของตัวแปล itemsSold ไป 1
+![fusion](./image/fusion4.png)
 
-บรรทัดที่ 97 โอนเงินค่า listingPrice ไปที่เจ้าของ Contract ( address ที่ deployed Contract )
+## Flow chart fusionNFT token
 
-บรรทัดที่ 101 fetchMarketItems เป็น function สำหรับ เรียกรายการ NFT ทั้งหมดที่ยังไม่ได้ขายเเต่ list อยู่บน marketplace
+ภาพประกอบ flow การทำงานของ function
 
-บรรทัดที่ 102 เป็นการดึงจำนวน id ล่าสุดที่ถูกสร้างขึ้นจะได้จำนวนของ item ที่ถูกสร้างขึ้นมาทั้งหมดบน marketplace
+![fusion](./image/fusionToken.png)
 
-บรรทัดที่ 103 เป็นการหาจำนวนของ NFT ที่ list อยุ่บน marketplace แต่ยังไม่ถูกซื้อ โดยการ นำจำนวนทั้งหมดของ item มาลบกับจำนวน item ที่ถูกทำการขายไปแล้ว
+## Owner.sol
 
-บรรทัดที่ 104 สร้างตัวแปลที่ใช้ในการ loop
+![owner](./image/owner.png)
 
-บรรทัดที่ 106 สร้างตัวแปลชนิด memory ประเภท array ที่ชื่อว่า items ขึ้นมาโดยกำหนดให้มีความยาวของ array เท่ากับจำนวนของ item ที่อยู่บน marketplace ที่ยังไม่ได้ขาย
+contract Owner เป็น contract ที่เกี่ยวกับการจัดเก็บ permission และความเป็นเจ้าของเพราะบาง function ที่เราต้องเรียกผ่าน contract หนึ่งไปยังอีก contract นั้นตัวแปร msg.sender จะไม่ใช้ address ของเรา แต่เป็น address ของ contract นั้นที่เป็นตัวกลางในการเรียกใช้งานเราจึงต้องเพื่ม permission ให้กับตัวกลางเพื่อให้สามารถเรียกใช้งาน function นั้นได้
 
-บรรทัดที่ 107 loop ไปที่ mapping ของ idToMarketItem ตามความยาวของตัวแปลที่ได้มากจาก itemCount เนื่องจาก mapping ไม่สามารถ loop ได้จึงได้เอาความยาวของ mapping มาใช้เเทนโดยเลือกจาก item ที่มีค่าของ owner เท่ากับ address(0) ( address(0) มีค่าเท่ากับ 0x00... ซื้อเราได้กำหนดค่าให้ตอนที่สร้างขึ้นมา ) หลังจากนั้นจึงนำค่าที่ได้ไปใส่ใน array ที่เราสร้างขึ้นจนครบจำนวน loop ที่เราต้องการจึง return ออกไป
+mapping \_approvals เป็น mapping ที่ map ค่า address ที่เราทำการ approved กับค่า bool เพื่อให้รู้ว่า address ไหนบ้างที่มีสิทธฺในการเรียกใช้งาน contract นั้นๆได้บ้าง
 
-![marketplace4](./image/marketplace4.png)
+function updateApprovals เนื่องจาก ตัวแปล \_approvals ถูกกำหนดค่าให้เป็น private ไม่สามารถเข้าถึงได้นอก contract เราจึงต้องสร้าง function ที่สามารถเรียกใช้งานได้นอก contract ขึ้นมาเพื่อ update ตัวแปร \_approvals ได้และจะเรียกใช้งานได้เฉพาะ owner ของ contract นั้นๆด้วย ( address ที่เป็นผู้ deploy contract )
 
-บรรทัดที่ 119 fetchMyNFTs เป็น function สำหรับ เรียกรายการ NFT ทั้งหมดที่ address ที่สร้าง transaction ขึ้นเป็นเจ้าของ
-
-บรรทัดที่ 124 loop ตามจำนวนความยาวของ item ที่มีทั้งหมดเพื่อหาจำนวนของ item ที่มี address ที่สร้าง transaction ขึ้นเป็นเจ้าของ
-
-บรรทัดที่ 130 สร้าง ตัวแปล items เป็น array และมีความยาวเท่ากับจำนวนจำนวน NFT ที่ address นั้นเป็นเจ้าของ
-
-บรรทัดที่ 131 loop ตามจำนวนความยาวของ mapping idToMarketItem โดยเลือกจาก item ที่มีค่าของ owner เท่ากับ msg.sender ( address ที่เป็นผู้ส่ง transaction ) เเล้ว return กลับไป
-
-![marketplace5](./image/marketplace5.png)
-
-บรรทัดที่ 143 fetchItemsCreated เป็น function สำหรับ เรียกรายการ NFT ทั้งหมดที่ address ที่สร้าง transaction ขึ้นเป็นคนสร้างขึ้น
-
-บรรทัดที่ 146 loop ตามจำนวนความยาวของ item ที่มีทั้งหมดเพื่อหาจำนวนของ item ที่มี address ที่สร้าง transaction ขึ้นเป็นคนสร้างขึ้นมา
-
-บรรทัดที่ 154 สร้าง ตัวแปล items เป็น array และมีความยาวเท่ากับจำนวนจำนวน NFT ที่ address ที่สร้าง transaction ขึ้นเป็นคนสร้างขึ้นมา
-
-บรรทัดที่ 156 loop ตามจำนวนความยาวของ mapping idToMarketItem โดยเลือกจาก item ที่มีค่าของ seller เท่ากับ msg.sender ( address ที่เป็นผู้ส่ง transaction ) เเล้ว return กลับไป
+function isApproved ใช้ตรวจสอบ ว่า address ที่ส่งมานั้นได้รับ permission ในการใช้งาน function หรือไม่
