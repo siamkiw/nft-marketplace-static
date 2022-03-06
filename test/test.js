@@ -18,7 +18,7 @@ contract("NFTMarket", ([deployer, author, tipper]) => {
     market.updateApprovals(nft.address, true);
   });
 
-  describe("deployment", (async) => {
+  describe("deployment",async () => {
     it("deploys NFTMarket successfully", async () => {
       NFTMarketAddress = await market.address;
       assert.notEqual(NFTMarketAddress, 0x0);
@@ -94,7 +94,7 @@ contract("NFTMarket", ([deployer, author, tipper]) => {
 
   describe("Fusion token", async function() {
 
-    it("Should check item thai is in market or not", async function() {
+    it("Should check item is in market or not", async function() {
       // create token
       await nft.createToken("https://www.mytokenlocation3.com");
       await nft.createToken("https://www.mytokenlocation4.com");
@@ -110,27 +110,33 @@ contract("NFTMarket", ([deployer, author, tipper]) => {
         value: listingPrice,
       });
 
-      let marketItems = await market.fetchMarketItems();
+      let marketItemsRaw = await market.fetchMarketItems();
 
-      // marketItems = await Promise.all(
-      //   items.map(async (i) => {
-      //     const tokenUri = await nft.tokenURI(i.tokenId);
-      //     let item = {
-      //       price: i.price.toString(),
-      //       tokenId: i.tokenId.toString(),
-      //       seller: i.seller,
-      //       owner: i.owner,
-      //       tokenUri,
-      //     };
-      //     return item;
-      //   })
-      // );
+      let marketItem = []
 
-      console.log("marketItems -> : ", marketItems)
+      for(let item of marketItemsRaw){
+        let tokenUri = await nft.tokenURI(item.tokenId)
+        let temp = {
+          price : item.price.toString(),
+          tokenId : item.tokenId.toString(),
+          itemId : item.itemId,
+          seller: item.seller,
+          owner : item.ownerAddress,
+          tokenUri 
+        }
+        marketItem.push(temp)
+      }
+
+      let marketId1 = await market.getMarketIdByToken(marketItem[marketItem.length - 1].tokenId)
+      let marketId2 = await market.getMarketIdByToken(marketItem[marketItem.length - 2].tokenId)
+
+      assert.notEqual(marketId1, 0, "this item is not in market. - first token ")
+      assert.equal(marketItem[marketItem.length - 1].itemId, marketId1, "tokenId and marketItemId is not match. - first token ");
+
+      assert.notEqual(marketId1, 0, "this item is not in market. - second token ")
+      assert.equal(marketItem[marketItem.length - 2].itemId, marketId2, "tokenId and marketItemId is not match. - second token ");
 
     });
-
-    // test nft marketplace isMarketItem 
 
     it("Should return true if tokenId is in marketplace.", async function(){
 
@@ -158,7 +164,6 @@ contract("NFTMarket", ([deployer, author, tipper]) => {
       
       assert.equal(inNotMarketplace, false, "token is not in market");
 
-      console.log("inMarketplace :", inMarketplace)
     })
 
     it("Should create token and fusion between item", async function() {
@@ -224,16 +229,12 @@ contract("NFTMarket", ([deployer, author, tipper]) => {
         myNFTS.push(parseInt(nft.toString()))
       }
 
-      console.log('myNFTS : ', myNFTS)
-
       // fusion token
       let fusionNFTRes = await fusion.fusionNFT(myNFTS[myNFTS.length - 1], myNFTS[myNFTS.length - 2], "https://www.myNewFusionToken2.com", {
         from: buyerAddress,
       });
 
       const fusionToken = fusionNFTRes.logs[0].args.itemId.toNumber()
-
-      console.log('fusionToken : ', fusionToken)
 
       myRawNFTs = await nft.fetchMyNFTs({ from: buyerAddress });
       myNFTS = []
