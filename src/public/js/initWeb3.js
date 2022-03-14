@@ -42,6 +42,7 @@ async function loadBlockchainData() {
       NFTMarketAbi.abi,
       NFTMarketAbiNetworkData.address
     );
+    
     NFTContract = new web3.eth.Contract(NFTAbi.abi, NFTAbiNetworkData.address);
 
     NFTFusionContract = new web3.eth.Contract(NFTFusionAbi.abi, NFTFusionNetworkData.address)

@@ -290,3 +290,168 @@ let myAddress = accounts[0]
 ```
 web3.utils.toWei("0.3", "Ether");
 ```
+
+เมื่อเราทำการเขียน test ของเราเสร็จแล้วสามารถ run ได้ผ่านคำสั่ง
+
+```
+truffle test
+```
+
+truffle จะทำการ run test ผ่าน blockchain ของ ganache และแสดงผลของการ test ผ่าน terminal
+
+![testing](./image/terminalTest.png)
+
+### การ Config Networks ที่เราต้องการจะ Deploy
+
+ให้ทำการไปที่ truffle-config.js
+
+ภายใน object network เราสามารถ init config ของ network ที่เราต้องการจะเชื่อมต่อได้ โดย key ของ object คือชื่อของ network ที่เราต้องการจะเชื่อมต่อซึ้งเราจะใช้ชื่อนนี้ในการสั่งให้ truffle deploy ไปที่ network
+ใด
+
+![config](./image/config.png)
+
+- host คือ ip address ที่เราต้องการจะเชื่อมต่อ
+- port คือ port ที่เราต้องการจะเชื่อมต่อ
+- network_id คือ network id เราต้องการจะเชื่อมต่อ network id นั้นขึ้นอยู่กับว่าเราเชื่อมต่ออยู่บน chain ไหน \* หมายถึง network id ไหนก็ได้
+
+![config](./image/ganache.png)
+
+ในกรณีเราจะเชื่อมต่อไปที่ ganache เราจะใช้ข้อมูล network ของ ganacha ในการเชื่อมต่อ
+
+```
+    development: {
+     host: "127.0.0.1",
+     port: 7545,
+     network_id: "*",
+    },
+```
+
+### Deploy Smart Contract
+
+เราสามารถ deploy smart contrat ของเราผ่าน command
+
+```
+truffle migrate --reset --network development
+```
+
+- migrate คือคำสั่งในการ deploy truffle จะทำการอ่านไฟล์และ deploy smart contract ที่อยู่ใน floder migrations ตามที่เราเขียนไว้
+- --reset จะทำการ reset ข้อมูลที่เราได้ทำการ deploy ขึ้น blockchain ก่อนหน้านี้
+- --network development เป็นคำสั่งในการระบุว่า network ไหนที่เราต้องการจะ deploy
+
+หลักจาก compile เสร็จแล้ว compiler จะ output ออกมาสองอย่างได้เเก่
+
+- byte code ซึ่งจะ deploy ขึ้น blockchain
+- ABI truffle จะสร้าง file ขึ้นมาเก็บไว้ใน floder build > contracts ซึ้งเราจะใช้ในการเชื่อมต่อเข้ากับ blockchain ผ่านทาง application ที่เราสร้างขึ้น
+
+### init server.js
+
+เราสร้างไฟล์ server.js ขึ้นมาเพื่อส่ง file ต่างๆไปที่ browser ของ user เพื่อใช้ในการติดต่อกับ blockchain
+
+![server](./image/server.png)
+
+### MetaMask การเชื่อมต่อกับ smart contract ฝั่งหน้าบ้าน
+
+ในการเชื่อมต่อเข้ากับ smart contract สิ่งที่จำเป็นมีสองอย่างได้แก่ ABI และ MetaMask
+
+ในไฟล์ initWeb3.js เราจะสร้าง function ที่ใช้ในการเชื่อมต่อเข้ากับ blockchain เช่น function ในการ get ABI จาก server ของเราหรือว่า function ที่ใช้ในการตรวจสอบว่า browser ของ user นั้นมี metamask อยู่หรือไม่
+
+function onGetAbi จะทำหน้าที่่ส่ง get request ไปที่ server ของเราเพื่อรับไฟล์ ABI กลับมาที่หน้า browser
+
+```
+async function onGetAbi(contractName) {
+  let response = await fetch(`/contracts/${contractName}.json`, {
+    method: "GET",
+  });
+  let result = await response.json();
+  return result;
+}
+```
+
+function loadWeb3 เป็น function ที่ใช้ในการตรวจสอบว่า browser ที่ user ใช้อยู่นั้นมี Metamask หรือ wallet อื่นๆติดตั้งอยู่หรือไม่
+
+```
+async function loadWeb3() {
+  if (window.ethereum) {
+    window.web3 = new Web3(window.ethereum);
+    await window.ethereum.enable();
+  } else if (window.web3) {
+    window.web3 = new Web3(window.web3.currentProvider);
+  } else {
+    window.alert("Non-Ethereum browser detected.");
+  }
+}
+
+```
+
+วิธีการสร้าง instace ที่ใช้ในการเชื่อมต่อเข้ากับ blockchain
+เราจะสร้างผ่านตัวแปร web3.eth.Contract ซึ้งเป็น function ที่ใช้ในการสร้าง instance โดยจะรับ parameter สองตัวได้แก่ ABI และ network address เพื่อใช้วนการ run function โดยข้อมูลต่างๆที่จำเป็นต้องใช้ในการสร้างนั้น จะถูกเก็บอยู่ใน ABI ทั้งหมด
+
+```
+const ContractInstance = new web3.eth.Contract(ContractAbi.abi, ContractNetworkData.address);
+```
+
+instance ที่เราสร้างขึ้นมานนี้จะสร้างมารถเรียก function ที่ถูกเขียนขึ้นบน smart contact ได้ทั้งหมดที่เป็น public function
+
+ในกรณีนี้ app ที่เราสร้างจะทำการเชื่อมต่อเข้ากับ contract ที่เราสร้าง 3 contract และจะสร้าง instance ทั้งหมด 3 ตัว
+
+```
+async function loadBlockchainData() {
+  const web3 = window.web3;
+
+  const accounts = await web3.eth.getAccounts();
+  console.log(accounts);
+
+  // NetWork ID
+  // get network id form metamask that we are useing
+  networkId = await web3.eth.net.getId();
+  // get network data form json abi file by networkId
+  const NFTMarketAbiNetworkData = NFTMarketAbi.networks[networkId];
+  const NFTAbiNetworkData = NFTAbi.networks[networkId];
+  const NFTFusionNetworkData = NFTFusionAbi.networks[networkId];
+
+  // check is network is valid
+  if (NFTMarketAbiNetworkData && NFTAbiNetworkData && NFTFusionNetworkData) {
+    // connect to contract
+    NFTMarketContract = new web3.eth.Contract(
+      NFTMarketAbi.abi,
+      NFTMarketAbiNetworkData.address
+    );
+
+    NFTContract = new web3.eth.Contract(NFTAbi.abi, NFTAbiNetworkData.address);
+
+    NFTFusionContract = new web3.eth.Contract(NFTFusionAbi.abi, NFTFusionNetworkData.address)
+
+    console.log("NFTMarketContract : ", NFTMarketContract.methods);
+    console.log("NFTContract : ", NFTContract.methods);
+    console.log("NFTFusion : ", NFTFusionContract.methods)
+  } else {
+    window.alert("Contract not deployed to detected network.");
+    return
+  }
+
+  if(!NFTMarketContract || !NFTContract || !NFTFusionContract){
+    window.alert("Contract not deployed to detected network.");
+    return
+  }
+
+  console.log("Contract deployed to network.")
+
+}
+```
+
+การเรียกใช้ function ของ smart contract ผ่าน instance ที่ถูกสร้างขึ้น
+instance ที่เราสร้างขึ้นนั้นเป็น object ซึ้
+ภายในจะเก็บ method และข้อมูลต่างๆ ของ contract นั้นๆไว้ โดยเราจะเรียกใช้ function ของ contract นั้นผ่าน object methods ตามด้วยชื่อของ function ที่เราต้องการเรียกใช้ ซึ้งอยู่ภายใน instance ที่เราสร้างขึ้น ตามด้วย mode ของ function ที่เราเรียกใช้ call หรือ send
+
+ตัวอยากการใช้ call() read mode
+
+```
+const items = await NFTMarketContract.methods.fetchMarketItems().call()
+
+```
+
+ตัวอย่างการใช้ send() write modes
+
+```
+let marketNFTTransaction = await NFTMarketContract.methods.createMarketItem(NFTAddress, NFTTokenID, NFTPrice).send({from: account[0], value: listingPrice})
+```
