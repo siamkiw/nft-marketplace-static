@@ -443,15 +443,26 @@ async function loadBlockchainData() {
 instance ที่เราสร้างขึ้นนั้นเป็น object ซึ้
 ภายในจะเก็บ method และข้อมูลต่างๆ ของ contract นั้นๆไว้ โดยเราจะเรียกใช้ function ของ contract นั้นผ่าน object methods ตามด้วยชื่อของ function ที่เราต้องการเรียกใช้ ซึ้งอยู่ภายใน instance ที่เราสร้างขึ้น ตามด้วย mode ของ function ที่เราเรียกใช้ call หรือ send
 
-ตัวอยากการใช้ call() read mode
+เราจะใช้งาน send() เมื่อเรื่ยกใช้ function ที่เป็นการเขียนข้อมูลลงบน storage ของ blockchain และจะใช้ call() เมื่อเรียกใช้ function ที่ทำการอ่านข้อมูลบน blockchain เท่านั้น
+
+ตัวอยากการใช้ call() read mode ใน function call เราสามารถใส่ parameter เป็น object ได้ที่มี key from ได้เพื่อเป็นการเลือกว่า เราต้องการทำ transaction ใด
 
 ```
-const items = await NFTMarketContract.methods.fetchMarketItems().call()
+const items = await NFTMarketContract.methods.fetchMarketItems().call(
+    {
+      from: accounts[0]
+    }
+  )
 
 ```
 
-ตัวอย่างการใช้ send() write modes
+ตัวอย่างการใช้ send() write mode เราสามารถเพิ่ม parameter ที่เป็น object ที่มี key from และ value ได้เพื่อระบุว่า address ใดเป็นผู้ส่ง และ value ซึ้งสามารถระบุจำนวนเงินที่เราต้องการส่งไปได้
 
 ```
-let marketNFTTransaction = await NFTMarketContract.methods.createMarketItem(NFTAddress, NFTTokenID, NFTPrice).send({from: account[0], value: listingPrice})
+let marketNFTTransaction = await NFTMarketContract.methods.createMarketItem(NFTAddress, NFTTokenID, NFTPrice).send(
+    {
+      from: account[0],
+      value: listingPrice
+    }
+  )
 ```
